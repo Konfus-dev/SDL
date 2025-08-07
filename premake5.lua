@@ -1,0 +1,2 @@
+
+CreateProjectFromCMake("SDL3", "./")

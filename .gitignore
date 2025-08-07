@@ -69,6 +69,11 @@ Xcode/build.xcconfig
 .vscode/
 
 # for Visual C++
+*.vcxproj
+*.filters
+*.user
+*.sln
+packages/
 .vs
 Debug
 Release
