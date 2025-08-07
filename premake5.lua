@@ -1,2 +1,2 @@
-dofile("Premake-Utils/premakeFromCmake.lua")
+dofile("./premake/premakeFromCmake.lua")
 CreateProjectFromCMake("SDL3", "./")
