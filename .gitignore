@@ -69,4 +69,4 @@ Makefile
 /include-config-releaseassert
 /include-config-release
 /include-config-debug
-/SDL3-shared.dir
+*.dir
