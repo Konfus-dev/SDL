@@ -528,15 +528,17 @@ if (LIBC_IS_GLIBC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
   sdl_compile_definitions(PRIVATE "_TIME_BITS=64")
 endif()
 
-check_linker_supports_version_file(HAVE_WL_VERSION_SCRIPT)
-if(HAVE_WL_VERSION_SCRIPT)
-  sdl_shared_link_options("-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/dynapi/SDL_dynapi.sym")
-else()
-   # When building with tcc on Linux+glibc or Android, avoid emitting an error
-   # for lack of support of the version-script linker flag: the option will be
-   # silently ignored by the compiler and the build will still succeed.
-   if(((LINUX AND LIBC_IS_GLIBC) OR ANDROID) AND (NOT USE_TCC))
-    message(FATAL_ERROR "Linker does not support '-Wl,--version-script=xxx.sym'. This is required on the current host platform (${SDL_CMAKE_PLATFORM}).")
+if(NOT WIN32)
+  check_linker_supports_version_file(HAVE_WL_VERSION_SCRIPT)
+  if(HAVE_WL_VERSION_SCRIPT)
+    sdl_shared_link_options("-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/dynapi/SDL_dynapi.sym")
+  else()
+    # When building with tcc on Linux+glibc or Android, avoid emitting an error
+    # for lack of support of the version-script linker flag: the option will be
+    # silently ignored by the compiler and the build will still succeed.
+    if(((LINUX AND LIBC_IS_GLIBC) OR ANDROID) AND (NOT USE_TCC))
+      message(FATAL_ERROR "Linker does not support '-Wl,--version-script=xxx.sym'. This is required on the current host platform (${SDL_CMAKE_PLATFORM}).")
+    endif()
   endif()
 endif()
 
@@ -678,10 +680,9 @@ if(USE_GCC OR USE_CLANG OR USE_INTELCC OR USE_QCC)
     if(LINKER_SUPPORTS_WL_UNDEFINED_ERROR)
       sdl_shared_link_options("-Wl,-undefined,error")
     endif()
-  elseif(NOT OPENBSD)
+  elseif(NOT OPENBSD AND NOT WIN32)
     cmake_push_check_state()
     check_linker_flag(C "-Wl,--no-undefined" LINKER_SUPPORTS_WL_NO_UNDEFINED)
-    #FIXME: originally this if had an additional "AND NOT (USE_CLANG AND WINDOWS)"
     if(LINKER_SUPPORTS_WL_NO_UNDEFINED)
       sdl_shared_link_options("-Wl,--no-undefined")
     endif()
