@@ -22,6 +22,9 @@
 
 // This file contains portable string manipulation functions for SDL
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include "SDL_vacopy.h"
 
 #ifdef SDL_PLATFORM_VITA
@@ -1155,7 +1158,12 @@ static const char ntoa_table[] = {
 
 char *SDL_itoa(int value, char *string, int radix)
 {
-#ifdef HAVE_ITOA
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_ITOA_BUFSIZE ((size_t)(sizeof(int) * CHAR_BIT) + 2)   /* sign + NUL */
+    (void)_ltoa_s((long)value, string, SDL_ITOA_BUFSIZE, radix);
+#undef SDL_ITOA_BUFSIZE
+    return string;
+#elif defined(HAVE_ITOA)
     return itoa(value, string, radix);
 #else
     return SDL_ltoa((long)value, string, radix);
@@ -1164,7 +1172,12 @@ char *SDL_itoa(int value, char *string, int radix)
 
 char *SDL_uitoa(unsigned int value, char *string, int radix)
 {
-#ifdef HAVE__UITOA
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_UITOA_BUFSIZE ((size_t)(sizeof(unsigned int) * CHAR_BIT) + 1)   /* NUL */
+    (void)_ultoa_s((unsigned long)value, string, SDL_UITOA_BUFSIZE, radix);
+#undef SDL_UITOA_BUFSIZE
+    return string;
+#elif defined(HAVE__UITOA)
     return _uitoa(value, string, radix);
 #else
     return SDL_ultoa((unsigned long)value, string, radix);
@@ -1173,26 +1186,39 @@ char *SDL_uitoa(unsigned int value, char *string, int radix)
 
 char *SDL_ltoa(long value, char *string, int radix)
 {
-#ifdef HAVE__LTOA
+#if defined(HAVE__LTOA) && !defined(SDL_PLATFORM_WINDOWS)
     return _ltoa(value, string, radix);
+#else
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_LTOA_BUFSIZE ((size_t)(sizeof(long) * CHAR_BIT) + 2)   /* sign + NUL */
+    (void)_ltoa_s(value, string, SDL_LTOA_BUFSIZE, radix);
+#undef SDL_LTOA_BUFSIZE
+    return string;
 #else
     char *bufp = string;
 
     if (value < 0) {
         *bufp++ = '-';
-        SDL_ultoa(-value, bufp, radix);
+        SDL_ultoa((unsigned long)(0 - (unsigned long)value), bufp, radix);
     } else {
         SDL_ultoa(value, bufp, radix);
     }
 
     return string;
+#endif
 #endif // HAVE__LTOA
 }
 
 char *SDL_ultoa(unsigned long value, char *string, int radix)
 {
-#ifdef HAVE__ULTOA
+#if defined(HAVE__ULTOA) && !defined(SDL_PLATFORM_WINDOWS)
     return _ultoa(value, string, radix);
+#else
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_ULTOA_BUFSIZE ((size_t)(sizeof(unsigned long) * CHAR_BIT) + 1)   /* NUL */
+    (void)_ultoa_s(value, string, SDL_ULTOA_BUFSIZE, radix);
+#undef SDL_ULTOA_BUFSIZE
+    return string;
 #else
     char *bufp = string;
 
@@ -1210,31 +1236,45 @@ char *SDL_ultoa(unsigned long value, char *string, int radix)
     SDL_strrev(string);
 
     return string;
+#endif
 #endif // HAVE__ULTOA
 }
 
 char *SDL_lltoa(long long value, char *string, int radix)
 {
-#ifdef HAVE__I64TOA
+#if defined(HAVE__I64TOA) && !defined(SDL_PLATFORM_WINDOWS)
     return _i64toa(value, string, radix);
+#else
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_LLTOA_BUFSIZE ((size_t)(sizeof(long long) * CHAR_BIT) + 2)   /* sign + NUL */
+    (void)_i64toa_s(value, string, SDL_LLTOA_BUFSIZE, radix);
+#undef SDL_LLTOA_BUFSIZE
+    return string;
 #else
     char *bufp = string;
 
     if (value < 0) {
         *bufp++ = '-';
-        SDL_ulltoa(-value, bufp, radix);
+        SDL_ulltoa((unsigned long long)(0 - (unsigned long long)value), bufp, radix);
     } else {
         SDL_ulltoa(value, bufp, radix);
     }
 
     return string;
+#endif
 #endif // HAVE__I64TOA
 }
 
 char *SDL_ulltoa(unsigned long long value, char *string, int radix)
 {
-#ifdef HAVE__UI64TOA
+#if defined(HAVE__UI64TOA) && !defined(SDL_PLATFORM_WINDOWS)
     return _ui64toa(value, string, radix);
+#else
+#if defined(SDL_PLATFORM_WINDOWS)
+#define SDL_ULLTOA_BUFSIZE ((size_t)(sizeof(unsigned long long) * CHAR_BIT) + 1)   /* NUL */
+    (void)_ui64toa_s(value, string, SDL_ULLTOA_BUFSIZE, radix);
+#undef SDL_ULLTOA_BUFSIZE
+    return string;
 #else
     char *bufp = string;
 
@@ -1252,6 +1292,7 @@ char *SDL_ulltoa(unsigned long long value, char *string, int radix)
     SDL_strrev(string);
 
     return string;
+#endif
 #endif // HAVE__UI64TOA
 }
 
